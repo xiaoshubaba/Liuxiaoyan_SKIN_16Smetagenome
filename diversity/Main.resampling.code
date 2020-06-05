@@ -1,0 +1,41 @@
+
+RE <- function(index){
+P_DRY <- c()
+P_OIL <- c()	
+i = 1
+while (i <= 100){
+DRY = rbind(D_S[sample(which((D_S$des=="H") & (D_S$type=="Dry")),5),],D_S[which((D_S$des=="Y") & (D_S$type=="Dry")),])
+OIL = rbind(D_S[sample(which((D_S$des=="H") & (D_S$type=="Oily")),7),],D_S[which((D_S$des=="Y") & (D_S$type=="Oily")),])
+P_DRY[i] = wilcox.test(value~des,data=DRY,alternative="greater")$p.value
+P_OIL[i] = wilcox.test(value~des,data=OIL,alternative="greater")$p.value
+i = i + 1
+}
+return(data.frame(Pvalue=c(P_DRY,P_OIL),type=c(rep("dry",100),rep("Oily",100)),index=rep(index,200) ))
+}
+
+D <- read.table("LXY_SKIN.diversity",head=T)
+C <- read.table("sample.cohort",head=T)
+D <- cbind(D,C)
+Pvalue <- c()
+#shannon
+D_S <- data.frame(value=D$shannon,des=D$des,type=D$type)
+SHANNON = RE("shannon")
+#simpson
+D_S <- data.frame(value=D$simpson,des=D$des,type=D$type)
+SIMPSON = RE("simpson")
+#inv-simpson
+D_S <- data.frame(value=D$invsimpson,des=D$des,type=D$type)
+INVSIMPSON = RE("invsimpson")
+#obs
+D_S <- data.frame(value=D$obs,des=D$des,type=D$type)
+OBS = RE("obs")
+#chao1
+D_S <- data.frame(value=D$chao1,des=D$des,type=D$type)
+C1 = RE("chao1")
+#ice
+D_S <- data.frame(value=D$ice,des=D$des,type=D$type)
+ICE = RE("ice")
+OUT <- rbind(SHANNON,SIMPSON,INVSIMPSON,OBS,C1,ICE)
+OUT$index <- factor(OUT$index,levels=c("shannon","simpson","invsimpson","obs","chao1","ice"))
+OUT$type <- factor(OUT$type,levels=c("dry","Oily"))
+p = ggboxplot(OUT,"type","Pvalue",color="type")
